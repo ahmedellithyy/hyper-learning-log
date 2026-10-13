@@ -10,7 +10,6 @@ I learn by doing: I solve problems on my own first, then document each solution 
 |---|---|---|
 | [`sql/`](sql/) | SQL with PostgreSQL | In progress |
 | [`python/`](python/) | Core Python | Coming soon |
-| [`pandas/`](pandas/) | Data analysis with pandas | Coming soon |
 | [`llms/`](llms/) | Working with large language models | Coming soon |
 
 Each folder has its own README with details, progress and key lessons.
