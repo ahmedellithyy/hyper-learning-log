@@ -84,3 +84,18 @@ FROM Weather w1
 JOIN Weather w2
   ON w1.recordDate = w2.recordDate + INTERVAL '1 day'
 WHERE w1.temperature > w2.temperature;
+
+
+-- -------------------------------------------------------------
+-- BASIC JOINS (addition)
+-- -------------------------------------------------------------
+
+-- 577. Employee Bonus
+-- Concept: LEFT JOIN, then filter while keeping the unmatched rows
+-- Lesson: employees with no bonus row get NULL, and NULL < 1000 is not true,
+-- so the IS NULL check is needed or they silently disappear
+SELECT e.name, b.bonus
+FROM Employee e
+LEFT JOIN Bonus b ON e.empId = b.empId
+WHERE b.bonus < 1000
+   OR b.bonus IS NULL;
