@@ -86,10 +86,6 @@ JOIN Weather w2
 WHERE w1.temperature > w2.temperature;
 
 
--- -------------------------------------------------------------
--- BASIC JOINS (addition)
--- -------------------------------------------------------------
-
 -- 577. Employee Bonus
 -- Concept: LEFT JOIN, then filter while keeping the unmatched rows
 -- Lesson: employees with no bonus row get NULL, and NULL < 1000 is not true,
@@ -99,3 +95,66 @@ FROM Employee e
 LEFT JOIN Bonus b ON e.empId = b.empId
 WHERE b.bonus < 1000
    OR b.bonus IS NULL;
+
+
+
+-- 1661. Average Time of Process per Machine
+-- Concept: self-join to put the start and end of a process on the same row
+-- Lesson: the activity_type conditions in ON fix the roles (s = start, e = end);
+-- without them start-start and end-end pairs make the average 0
+-- Note: timestamp is a float, so cast to numeric before ROUND(value, 3)
+SELECT s.machine_id,
+       ROUND(AVG(e.timestamp - s.timestamp)::numeric, 3) AS processing_time
+FROM Activity s
+JOIN Activity e
+  ON s.machine_id = e.machine_id
+ AND s.process_id = e.process_id
+ AND s.activity_type = 'start'
+ AND e.activity_type = 'end'
+GROUP BY s.machine_id;
+
+
+-- 1280. Students and Examinations
+-- Concept: CROSS JOIN builds every student/subject pair, LEFT JOIN attaches
+-- the exams, GROUP BY + COUNT turns them into one number per pair
+-- Lesson: COUNT a column from the third table (not COUNT(*)) so pairs with
+-- no exams show 0, and match on BOTH student and subject in ON
+SELECT st.student_id,
+       st.student_name,
+       sub.subject_name,
+       COUNT(ex.subject_name) AS attended_exams
+FROM Students st
+CROSS JOIN Subjects sub
+LEFT JOIN Examinations ex
+  ON st.student_id = ex.student_id
+ AND sub.subject_name = ex.subject_name
+GROUP BY st.student_id, st.student_name, sub.subject_name
+ORDER BY st.student_id, sub.subject_name;
+
+
+-- 570. Managers with at Least 5 Direct Reports
+-- Concept: self-join to count rows that point to another row, HAVING to
+-- filter on the count
+-- Lesson: read ON as a sentence ("e's manager is m"), then SELECT and
+-- GROUP BY the manager alias and COUNT the employee alias
+SELECT m.name
+FROM Employee m
+JOIN Employee e ON e.managerId = m.id
+GROUP BY m.id, m.name
+HAVING COUNT(e.id) >= 5;
+
+
+-- 1934. Confirmation Rate
+-- Concept: conditional counting with COUNT(*) FILTER, then a ratio per user
+-- Lesson: integer / integer drops the decimals in PostgreSQL, so cast to
+-- numeric BEFORE dividing; ROUND afterwards is too late
+-- Note: COUNT(*) counts the NULL row from the LEFT JOIN, so users with no
+-- confirmations divide by 1 (not 0) and get 0.00
+SELECT s.user_id,
+       ROUND(
+         COUNT(*) FILTER (WHERE c.action = 'confirmed')::numeric / COUNT(*),
+         2
+       ) AS confirmation_rate
+FROM Signups s
+LEFT JOIN Confirmations c ON s.user_id = c.user_id
+GROUP BY s.user_id;
